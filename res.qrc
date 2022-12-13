@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/new/authimg"/>
+    <qresource prefix="/img">
+        <file>key-auth.png</file>
+        <file>userset.png</file>
+        <file>usermng.png</file>
+        <file>exitsys.png</file>
+        <file>scoremng.png</file>
+        <file>chngpwd.png</file>
+        <file>scoreqry.png</file>
+    </qresource>
+</RCC>

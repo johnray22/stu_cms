@@ -1,0 +1,174 @@
+#include "pwddialog.h"
+#include "ui_pwddialog.h"
+#include "util.h"
+#include <QMessageBox>
+#include<QSqlError>
+#include<QSqlRecord>
+int flag=0;
+bool complete=true;
+QSqlTableModel *model_;
+int index_;
+bool ok_;
+int type_;
+pwdDialog::pwdDialog(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::pwdDialog)
+{
+    ui->setupUi(this);
+    ui->dateEdit->setCalendarPopup(true);
+    ui->dateEdit->setDisplayFormat("yyyy-MM-dd");
+}
+
+pwdDialog::~pwdDialog()
+{
+    delete ui;
+}
+
+void pwdDialog::commitdata(QSqlTableModel *model,int index,int type,bool &ok){
+    model_=model;
+    index_=index;
+    type_=type;
+    ok_=ok;
+}
+void pwdDialog::getinput(stuInfo &stuinfo){
+    stuinfo.Confirm=flag;
+    stuinfo.stuno=ui->stuno->text();
+    stuinfo.pwd=ui->pwd->text();
+    stuinfo.name=ui->name->text();
+    stuinfo.sex=ui->comboBox->currentText();
+    stuinfo.birth=ui->dateEdit->date().toString("yyyy-MM-dd");
+    stuinfo.region=ui->region->text();
+    stuinfo.grade=ui->grade->text();
+    stuinfo.classes=ui->classes->text();
+}
+void pwdDialog::setinput(){
+    ui->stuno->setText(model_->record(index_).value("stuno").toString());
+    ui->name->setText(model_->record(index_).value("stuname").toString());
+    ui->comboBox->setCurrentText(model_->record(index_).value("sex").toString());
+    ui->dateEdit->setDate(QDate::fromString(model_->record(index_).value("birth").toString(),"yyyy-MM-dd"));
+    ui->region->setText(model_->record(index_).value("region").toString());
+    ui->grade->setText(model_->record(index_).value("grade").toString());
+    ui->classes->setText(model_->record(index_).value("class").toString());
+    if(type_==0){
+        ui->pwd->setDisabled(true);//禁用密码修改框
+    }
+}
+
+void pwdDialog::on_stuno_textChanged(const QString &arg1)
+{
+    if(!UtilisDigital(arg1)){
+        ui->label_no->setText("仅能包含数字");
+        ui->label_no->setStyleSheet("color:#D20112");
+        complete=false;
+    }else{
+        ui->label_no->setText("格式正确");
+        ui->label_no->setStyleSheet("color:#02B61E");
+        complete=true;
+    }
+}
+
+void pwdDialog::on_pushButton_clicked()
+{
+    flag=1;
+    stuInfo *stuinfo=new stuInfo;
+    stuinfo->Confirm=flag;
+    stuinfo->stuno=ui->stuno->text();
+    stuinfo->pwd=ui->pwd->text();
+    stuinfo->name=ui->name->text();
+    stuinfo->sex=ui->comboBox->currentText();
+    stuinfo->birth=ui->dateEdit->date().toString("yyyy-MM-dd");
+    stuinfo->region=ui->region->text();
+    stuinfo->grade=ui->grade->text();
+    stuinfo->classes=ui->classes->text();
+     if(type_==1){//添加模式
+         model_->setTable("stu_info"); //设置表
+         model_->select(); //选择操作
+         int rowNum = model_->rowCount();
+                 model_->insertRow(rowNum);// 添加一行
+                 index_= rowNum;
+                 model_->setData(model_->index(index_,0),stuinfo->stuno);
+                 model_->setData(model_->index(index_,1),stuinfo->name);
+                 model_->setData(model_->index(index_,2),stuinfo->pwd);
+                 model_->setData(model_->index(index_,3),stuinfo->birth);
+                 model_->setData(model_->index(index_,4),stuinfo->sex);
+                 model_->setData(model_->index(index_,5),stuinfo->region);
+                 model_->setData(model_->index(index_,6),stuinfo->grade);
+                 model_->setData(model_->index(index_,7),stuinfo->classes);
+                 if (model_->submitAll()) { //事物
+                 model_->database().commit(); //提交
+                 QMessageBox::information(this, tr("提示"),
+                 tr("操作成功"));
+                 this->close();
+                 } else {
+                 model_->database().rollback(); //回滚
+                 QMessageBox::warning(this, tr("tableModel"),
+                 tr("数据库错误: %1").arg(model_->lastError().text()));
+                 }
+
+     }else if(type_==0){//修改模式
+         model_->setData(model_->index(index_,0),stuinfo->stuno);
+         model_->setData(model_->index(index_,1),stuinfo->name);
+         model_->setData(model_->index(index_,2),stuinfo->birth);
+         model_->setData(model_->index(index_,3),stuinfo->sex);
+         model_->setData(model_->index(index_,4),stuinfo->region);
+         model_->setData(model_->index(index_,5),stuinfo->grade);
+         model_->setData(model_->index(index_,6),stuinfo->classes);
+         if (model_->submitAll()) { //事物
+         model_->database().commit(); //提交
+         QMessageBox::information(this, tr("提示"),
+         tr("操作成功"));
+         this->close();
+         } else {
+         model_->database().rollback(); //回滚
+         QMessageBox::warning(this, tr("tableModel"),
+         tr("数据库错误: %1").arg(model_->lastError().text()));
+         }
+     }
+
+}
+
+
+void pwdDialog::on_pushButton_2_clicked()
+{
+    flag=0;
+    this->close();
+}
+
+void pwdDialog::on_pwd_textChanged(const QString &arg1)
+{
+    if(!Utilispwd(arg1)){
+        ui->label_pwd->setText(0"需至少包含两种字符");
+        ui->label_pwd->setStyleSheet("color:#D20112");
+        complete=false;
+    }else{
+        ui->label_pwd->setText("格式正确");
+        ui->label_pwd->setStyleSheet("color:#02B61E");
+        complete=true;
+    }
+}
+
+void pwdDialog::on_grade_textChanged(const QString &arg1)
+{
+    if(!UtilisDigital(arg1)){
+        ui->label_grade->setText("仅能包含数字");
+        ui->label_grade->setStyleSheet("color:#D20112");
+        complete=false;
+    }else{
+        ui->label_grade->setText("格式正确");
+        ui->label_grade->setStyleSheet("color:#02B61E");
+        complete=true;
+    }
+}
+
+void pwdDialog::on_classes_textChanged(const QString &arg1)
+{
+    if(!UtilisDigital(arg1)){
+        ui->label_grade->setText("仅能包含数字");
+        ui->label_grade->setStyleSheet("color:#D20112");
+        complete=false;
+    }else{
+        ui->label_grade->setText("格式正确");
+        ui->label_grade->setStyleSheet("color:#02B61E");
+        complete=true;
+    }
+}
