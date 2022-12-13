@@ -19,7 +19,7 @@ static bool createConnection()
     db.setHostName("ali.zhongruigo.com");                  //域名
     db.setDatabaseName("studentcms");                      //数据库名
     db.setUserName("root");                                //用户名
-    db.setPassword("liboBOLI22!&");                        //密码
+    db.setPassword("");                        //密码
     if (!db.open())
     { //如果无法连接
         QMessageBox::critical(0, QObject::tr("无法打开数据库"),
